@@ -64,41 +64,32 @@ void campo_prim(int n,double sigma[],int n_h, double h[], double frq, double zp[
     }
     complex double Zap[n];
     Zap[n-1]=Zint[n];
-    //printf("%f %f\n",creal(Zap[n-1]),cimag(Zap[n-1]));
     for (cont=n-2;cont>=0;cont--)
     {
         complex double aux=u[cont+1]*h[cont];
         Zap[cont]=Zint[cont+1]*(Zap[cont+1]+Zint[cont+1]*tgh(aux))/(Zint[cont+1]+Zap[cont+1]*tgh(aux));
-       // printf("%f %f\n", creal(Zap[cont]),cimag(Zap[cont]));
     }
     complex double rtm[n-1];
     rtm[0]=(Zint[0]-Zap[0])/(Zint[0]+Zap[0]);
-    printf("%f %f\n", creal(rtm[0]),cimag(rtm[0]));
     for (cont=1;cont<n;cont++)
     {
         complex double aux=u[cont]*h[cont-1];
         rtm[cont]=(Zint[cont]-Zap[cont])/(Zint[cont]+Zap[cont]);
         H[cont]=H[cont-1]*(1+rtm[cont-1])*exp(-aux)/(1+rtm[cont]*exp(-2*aux));
-        printf("%f %f\n", creal(H[cont]),cimag(H[cont]));
     }
     H[n]=H[n-1]*(1+rtm[n-1]);
-    //printf("%f %f\n", creal(H[n]),cimag(H[n]));
-    //int aa=(np+1)*sizeof(complex double);
-    //complex double *Hp = malloc((np+1)*sizeof(complex double));
     int cmd=0;
     for (cont=0;cont<np;cont++)
     {
         int flag=0;
         for (ic=0;ic<n;ic++)
         {
-            //printf("%f\n",z[ic]);
             if (zp[cont]<z[ic] && flag==0)
             {
                 cmd=ic;
                 flag=1;
             }
         }
-       //printf("%f\n",zp[0]);
         if (zp[cont]>z[0])
         {
             if (zp[cont]<z[n_h])
@@ -163,6 +154,7 @@ int main()
     complex double Y[np],Yj[np],sig[np];
     double w =2*pi*frq;
     Y[0]=I*w*eps;
+    complex double Z=I*w*mu;
     for (cont=1;cont<=n_cam;cont++)
     {
         Y[cont]=sigma[cont-1]+I*w*eps;
@@ -194,6 +186,40 @@ int main()
     ic=0;
     complex double Hp[np];
     campo_prim(n_s,sigma,n_h,espessura,frq,zv,np,Hp);
-    //free(Hp);
+    double xv2[nz*nx2];
+    for (j=0;j<nz;j++)
+    {
+      for (i=0;i<nx2;i++)
+      {
+        xv2[ic]=x(i);
+        ic=ic+1;
+      }
+    }
+    //definição de coeficientes da edo
+    complex double a(double x, double z){return 1;}
+    complex double b(double x, double z){return 0;}
+    complex double c(double x, double z){return 1;}
+    complex double d(double x, double z){return 0;}
+    complex double e(double x, double z){return 0;}
+    complex double f(double Z, double Y){return -Z*Y;}
+    complex double g(double Z, complex double Yj, complex double Yp, complex double Hp){return -Z*(Yj-Yp)*Hp;}
+    ic=0;
+    int cc=0;
+    int el[(nz-1)*(nx-1)*2][4];
+    cont=1;
+    for (j=0;j<(nz-1);j++)
+    {
+      for (i=0;i<nx;i++)
+      {
+        if(i<nx)
+        {
+          el[cc,0]=ic+1;
+          el[cc,1]=ic+2;
+          el[cc,2]=ic+nx+1;
+          el[cc,3]=cc+1;
+          cc=cc+1;
+        }
+      }
+    }
     return 0;
 }
