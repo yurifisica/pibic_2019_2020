@@ -54,34 +54,36 @@ void campo_prim(int n,double sigma[],int n_h, double h[], double frq, double zp[
     complex double u[n+1];
     complex double Zint[n+1];
     Y[0]=I*w*eps;
-    u[0]=I*sqrt(-Z*Y[0]);
+    u[0]=I*csqrt(-Z*Y[0]);
     Zint[0]=u[0]/Y[0];
-    printf("%4.12f %4.12f",creal(u[0]),cimag(u[0]));
     for (cont=1;cont<=n;cont++)
     {
         Y[cont]=sigma[cont-1]+I*w*eps;
-        u[cont]=I*sqrt(-Z*Y[cont]);
+        u[cont]=I*csqrt(-Z*Y[cont]);
         Zint[cont]=u[cont]/Y[cont];
     }
     complex double Zap[n];
     Zap[n-1]=Zint[n];
+    //printf("%f %f\n",creal(Zap[n-1]),cimag(Zap[n-1]));
     for (cont=n-2;cont>=0;cont--)
     {
         complex double aux=u[cont+1]*h[cont];
         Zap[cont]=Zint[cont+1]*(Zap[cont+1]+Zint[cont+1]*tgh(aux))/(Zint[cont+1]+Zap[cont+1]*tgh(aux));
-//                 printf("%f %f\n", creal(Zap[cont]),cimag(Zap[cont]));
+       // printf("%f %f\n", creal(Zap[cont]),cimag(Zap[cont]));
     }
     complex double rtm[n-1];
     rtm[0]=(Zint[0]-Zap[0])/(Zint[0]+Zap[0]);
+    printf("%f %f\n", creal(rtm[0]),cimag(rtm[0]));
     for (cont=1;cont<n;cont++)
     {
         complex double aux=u[cont]*h[cont-1];
         rtm[cont]=(Zint[cont]-Zap[cont])/(Zint[cont]+Zap[cont]);
         H[cont]=H[cont-1]*(1+rtm[cont-1])*exp(-aux)/(1+rtm[cont]*exp(-2*aux));
+        printf("%f %f\n", creal(H[cont]),cimag(H[cont]));
     }
     H[n]=H[n-1]*(1+rtm[n-1]);
-//    printf("%f %f", creal(H[n]),cimag(H[n]));
-    int aa=(np+1)*sizeof(complex double);
+    //printf("%f %f\n", creal(H[n]),cimag(H[n]));
+    //int aa=(np+1)*sizeof(complex double);
     //complex double *Hp = malloc((np+1)*sizeof(complex double));
     int cmd=0;
     for (cont=0;cont<np;cont++)
@@ -125,7 +127,6 @@ void campo_prim(int n,double sigma[],int n_h, double h[], double frq, double zp[
 //programa principal
 int main()
 {
-    printf("%1.14f",eps);
 	int n_cam=2,cont,j,i;//numero de camadas
     double frq=5*pow(10,3);//frequência
     double espessura[1]={200};//espessura das camadas intermediárias
@@ -196,6 +197,3 @@ int main()
     //free(Hp);
     return 0;
 }
-
-
-
