@@ -1,4 +1,4 @@
-#include <stdio.h>
+(i=0;i>np;i++){#include <stdio.h>
 #include <stdlib.h>
 #include <complex.h>
 #include <math.h>
@@ -216,10 +216,142 @@ int main()
           el[cc,0]=ic+1;
           el[cc,1]=ic+2;
           el[cc,2]=ic+nx+1;
-          el[cc,3]=cc+1;
+          el[cc,3]=cc;
           cc=cc+1;
+          el(cc,0)=ic+2;
+          el(cc,1)=ic+nx+2;
+          el(cc,2)=ic+nx+1;
+          el(cc,3)=cc;
+        } else
+        {
+          cont++;
+        }
+        ic++;
+      }
+    }
+    //condições de fronteira
+    int vc[np];
+    complex double Hs[np];
+    for (i=0;i<np,i++)
+    {
+      vc[i]=0;
+      if (xv[i]==xv[1] || xv[i]==xv[np] || zv[i]==zv[1]|| zv[i]==zv[np])
+      {
+        Hs[i]=0; vc[i]=1;
+      }
+    }
+
+    //definição dos meios secundários
+    complex double Yj[np];
+    complex double M[np];
+    //meio secundário 1 (solo)
+    for (i=0;i<np,i++)
+    {
+      if (xv[i]>=3000 && xv[i]>=10000 && zv[i]>5000 && zv[i]<=6500)
+      {
+        Yj[i]=sigma1+I*w*eps; sig[i]=sigma1;
+      }
+      M[i]=0;
+    }
+
+    //meio secundário 2 (mar)
+    for (i=0;i<np,i++)
+    {
+      if (xv[i]>=0 && xv[i]<=3000)
+      {
+        if (zv[i]>=espessura && zv[i]<(5*espessura)/4)
+        {
+          Yj[i]=sigma2+I*w*eps; sig[i]=sigma2;
         }
       }
+    }
+    ic=0;
+    flag=0;
+    for (j=1;j<(nz-1);j++)
+    {
+      for (i=1;i<(nx-1);i++)
+      {
+        ic++;
+        if (xv[i]>=2000 && x[i]<=5000)
+        {
+          if (z[j]>=(((z[j]-z[j-1])/(x[i]-x[i-1]))*x[i]) && z[j]<=(3*espessura)/2 && z[j]>(13*espessura)/12)
+          {
+            Yj[i]=sigma2+I*w*eps; sig[i]=sigma2;
+          }
+        }
+      }
+    }
+    //meio secundário 3 (prédios)
+    for (i=0;i>np;i++)
+    {
+        if (xv[i]>=6500 & xv[i]<=7000 & zv[i]>=espessura-50 & zv[i]<espessura) {
+            Yj[i]=sigma3+%i*w*eps;
+            sig[i]=sigma3;
+        }
+        if (xv[i]>=7500 & xv[i]<=8000 & zv[i]>=espessura-50 & zv[i]<espessura) {
+            Yj[i]=sigma3+%i*w*eps;
+            sig[i]=sigma3;
+        }
+        if (xv[i]>=8500 & xv[i]<=9500 & zv[i]>=espessura-50 & zv[i]<espessura) {
+            Yj[i]=sigma3+%i*w*eps;
+            sig[i]=sigma3;
+        }
+    }
+
+    //construção da matriz e vetor da direita
+    complex double K[np][np];
+    complex double k[3][3],m[3][3];
+    for (i=0;i<ne;i++){
+        dx[1]=zv[el[i][2]]-zv[el[i][3]];
+        dx[2]=zv[el[i][3]]-zv[el[i][1]];
+        dx[3]=zv[el[i][1]]-zv[el[i][2]];
+        dz[1]=xv[el[i][3]]-xv[el[i][2]];
+        dz[2]=xv[el[i][1]]-xv[el[i][3]];
+        dz[3]=xv[el[i][2]]-xv[el[i][1]];
+        dt=abs(xv[el[i][2]]*zv[el[i][3]]+xv[el[i][1]]*zv[el[i][2]]+xv[el[i][3]]*zv[el[i][1]]-xv[el[i][2]]*zv[el[i][1]]-xv[el[i][3]]*zv[el[i][2]]-xv[el[i][1]]*zv[el[i][3]])/2;//delta
+        a1=a(xv[el[i][1]],zv[el[i][1]]);
+        a2=a(xv[el[i][2]],zv[el[i][2]]);
+        a3=a(xv[el[i][3]],zv[el[i][3]]);
+
+        b1=b(xv[el[i][1]],zv[el[i][1]]);
+        b2=b(xv[el[i][2]],zv[el[i][2]]);
+        b3=b(xv[el[i][3]],zv[el[i][3]]);
+
+        c1=c(xv[el[i][1]],zv[el[i][1]]);
+        c2=c(xv[el[i][2]],zv[el[i][2]]);
+        c3=c(xv[el[i][3]],zv[el[i][3]]);
+
+        d1=d(xv[el[i][1]],zv[el[i][1]]);
+        d2=d(xv[el[i][2]],zv[el[i][2]]);
+        d3=d(xv[el[i][3]],zv[el[i][3]]);
+
+        e1=e(xv[el[i][1]],zv[el[i][1]]);
+        e2=e(xv[el[i][2]],zv[el[i][2]]);
+        e3=e(xv[el[i][3]],zv[el[i][3]]);
+
+        f1=f(Z,Yj[el[i][1]]);
+        f2=f(Z,Yj[el[i][2]]);
+        f3=f(Z,Yj[el[i][3]]);
+
+        g1=g(Z,Yj[el[i][1]],Y[el[i][1]],Hp[el[i][1]]);
+        g2=g(Z,Yj[el[i][2]],Y[el[i][2]],Hp[el[i][2]);
+        g3=g(Z,Yj[el[i][3]],Y[el[i][3]],Hp[el[i][3]]);
+        //matriz para cada elemento
+        k=(-1/(4*dt))*[dx[1]*dx[1]*a1 dx[1]*dx[2]*a2 dx[1]*dx[3]*a3;dx[2]*dx[1]*a1 dx[2]*dx[2]*a2 dx[2]*dx[3]*a3;dx[3]*dx[1]*a1 dx[3]*dx[2]*a2 dx[3]*dx[3]*a3];
+        k=k+(-1/(4*dt))*[dx[1]*dz[1]*b1 dx[1]*dz[2]*b2 dx[1]*dz[3]*b3;dx[2]*dz[1]*b1 dx[2]*dz[2]*b2 dx[2]*dz[3]*b3;dx[3]*dz[1]*b1 dx[3]*dz[2]*b2 dx[3]*dz[3]*b3];
+        k=k+(-1/(4*dt))*[dz[1]*dz[1]*c1 dz[1]*dz[2]*c2 dz[1]*dz[3]*c3;dz[2]*dz[1]*c1 dz[2]*dz[2]*c2 dz[2]*dz[3]*c3;dz[3]*dz[1]*c1 dz[3]*dz[2]*c2 dz[3]*dz[3]*c3];
+        k=k+(1/6)*[dx[1]*d1 dx[2]*d2 dx[3]*d3;dx[1]*d1 dx[2]*d2 dx[3]*d3;dx[1]*d1 dx[2]*d2 dx[3]*d3];
+        k=k+(1/6)*[dz[1]*e1 dz[2]*e2 dz[3]*e3;dz[1]*e1 dz[2]*e2 dz[3]*e3;dz[1]*e1 dz[2]*e2 dz[3]*e3];
+        k=k+(dt/12)*[2*f1 f2 f3;f1 2*f2 f3;f1 f2 2*f3];
+        //vetor da direita em cada elemento
+        m = (dt/12)*[2 1 1;1 2 1;1 1 2]*[g1;g2;g3];
+        //Matriz global vetor da direita
+        for (j1=0;j1<3;j1++){
+            for (i1=0;i1<3;i1++){
+                K[el[i][j1]][el[i][i1]]=K[el[i][j1],el[i][i1]]+k[j1][i1];
+            }
+            M[el[i][j1]]=M[el[i][j1]]+m[j1];
+        }
     }
     return 0;
 }
