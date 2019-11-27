@@ -258,7 +258,7 @@ int main()
     {
       if (xv[i]>=0 && xv[i]<=3000)
       {
-        if (zv[i]>=espessura && zv[i]<(5*espessura)/4)
+        if ((zv[i]>=espessura) && (zv[i]<(5*espessura)/4))
         {
           Yj[i]=sigma2+I*w*eps; sig[i]=sigma2;
         }
