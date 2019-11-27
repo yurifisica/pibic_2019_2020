@@ -127,11 +127,11 @@ int main()
     double z0=0;
     double zn=espessura[0]*2;//profundidade da malha
     int nz=37;//numero de pontos em z
-    double dz=abs(zn-z0)/(nz-1);
+    double dz1=abs(zn-z0)/(nz-1);
     double z[nz];
     for (cont=0;cont<nz;cont++)
     {
-        z[cont]=cont*dz;
+        z[cont]=cont*dz1;
     }
     nz=length(z);
     double x0=0;
@@ -139,11 +139,11 @@ int main()
     int nx=37;//numero de pontos em x, na malha reduzida
     double x[nx+4],xt[nx];
     x[0]=-xn+xn/4;x[1]=-xn+xn/2;
-    double dx=abs(xn-x0)/(nx-1);
+    double dx1=abs(xn-x0)/(nx-1);
     for (cont=0;cont<nx;cont++)
     {
-        xt[cont]=cont*dx;
-        x[cont+2]=cont*dx;
+        xt[cont]=cont*dx1;
+        x[cont+2]=cont*dx1;
     }
     x[nx+3]=xn+xn/4;x[nx+4]=xn+xn/2;
     nx=length(x);//numero de pontos em x, na malha completa
@@ -258,7 +258,7 @@ int main()
     {
       if (xv[i]>=0 && xv[i]<=3000)
       {
-        if ((zv[i]>=espessura) && (zv[i]<(5*espessura)/4))
+        if ((zv[i]>=espessura[0]) && (zv[i]<(5*espessura[0])/4))
         {
           Yj[i]=sigma2+I*w*eps; sig[i]=sigma2;
         }
@@ -273,7 +273,7 @@ int main()
         ic++;
         if (xv[i]>=2000 && x[i]<=5000)
         {
-          if (z[j]>=(((z[j]-z[j-1])/(x[i]-x[i-1]))*x[i]) && z[j]<=(3*espessura)/2 && z[j]>(13*espessura)/12)
+          if (z[j]>=(((z[j]-z[j-1])/(x[i]-x[i-1]))*x[i]) && z[j]<=(3*espessura[0])/2 && z[j]>(13*espessura[0])/12)
           {
             Yj[i]=sigma2+I*w*eps; sig[i]=sigma2;
           }
@@ -283,15 +283,15 @@ int main()
     //meio secundário 3 (prédios)
     for (i=0;i>np;i++)
     {
-        if (xv[i]>=6500 & xv[i]<=7000 & zv[i]>=espessura-50 & zv[i]<espessura) {
+        if (xv[i]>=6500 && xv[i]<=7000 && zv[i]>=espessura[0]-50 && zv[i]<espessura[0]) {
             Yj[i]=sigma3+I*w*eps;
             sig[i]=sigma3;
         }
-        if (xv[i]>=7500 & xv[i]<=8000 & zv[i]>=espessura-50 & zv[i]<espessura) {
+        if (xv[i]>=7500 && xv[i]<=8000 && zv[i]>=espessura[0]-50 && zv[i]<espessura[0]) {
             Yj[i]=sigma3+I*w*eps;
             sig[i]=sigma3;
         }
-        if (xv[i]>=8500 & xv[i]<=9500 & zv[i]>=espessura-50 & zv[i]<espessura) {
+        if (xv[i]>=8500 && xv[i]<=9500 && zv[i]>=espessura[0]-50 && zv[i]<espessura[0]) {
             Yj[i]=sigma3+I*w*eps;
             sig[i]=sigma3;
         }
@@ -299,30 +299,39 @@ int main()
 
     //construção da matriz e vetor da direita
     complex double K[np][np];
-    complex double k[3][3],m[3][3];
+    complex double k[3][3],m[3];
+    double dt;
+    double dx[3],dz[3];    
+    int i1,j1;
+    complex double al[3];
+    complex double bl[3];
+    complex double cl[3];
+    complex double dl[3];
+    complex double El[3];
+    complex double fl[3];
+    complex double gl[3];
     for (i=0;i<ne;i++){
-        dx[1]=zv[el[i][2]]-zv[el[i][3]];
-        dx[2]=zv[el[i][3]]-zv[el[i][1]];
-        dx[3]=zv[el[i][1]]-zv[el[i][2]];
-        dz[1]=xv[el[i][3]]-xv[el[i][2]];
-        dz[2]=xv[el[i][1]]-xv[el[i][3]];
-        dz[3]=xv[el[i][2]]-xv[el[i][1]];
-        dt=abs(xv[el[i][2]]*zv[el[i][3]]+xv[el[i][1]]*zv[el[i][2]]+xv[el[i][3]]*zv[el[i][1]]-xv[el[i][2]]*zv[el[i][1]]-xv[el[i][3]]*zv[el[i][2]]-xv[el[i][1]]*zv[el[i][3]])/2;//delta
+        dx[0]=zv[el[i][1]]-zv[el[i][2]];
+        dx[1]=zv[el[i][2]]-zv[el[i][0]];
+        dx[2]=zv[el[i][0]]-zv[el[i][1]];
+        dz[0]=xv[el[i][2]]-xv[el[i][1]];
+        dz[1]=xv[el[i][0]]-xv[el[i][2]];
+        dz[2]=xv[el[i][1]]-xv[el[i][0]];
+        dt=abs(xv[el[i][1]]*zv[el[i][2]]+xv[el[i][0]]*zv[el[i][1]]+xv[el[i][2]]*zv[el[i][0]]-xv[el[i][1]]*zv[el[i][0]]-xv[el[i][2]]*zv[el[i][1]]-xv[el[i][0]]*zv[el[i][2]])/2;//delta
         for (cont=0;cont<3;cont++){
-          complex double al[cont]=a(xv[el[i][cont]],zv[el[i][cont]]);
-          complex double bl[cont]=b(xv[el[i][cont]],zv[el[i][cont]]);
-          complex double cl[cont]=c(xv[el[i][cont]],zv[el[i][cont]]);
-          complex double dl[cont]=d(xv[el[i][cont]],zv[el[i][cont]]);
-          complex double el[cont]=e(xv[el[i][cont]],zv[el[i][cont]]);
-          complex double fl[cont]=f(Z,Yj[el[i][cont]]);
-          complex double gl[cont]=g(Z,Yj[el[i][cont]],Y[el[i][cont]],Hp[el[i][cont]]);
+          al[cont]=a(xv[el[i][cont]],zv[el[i][cont]]);
+          bl[cont]=b(xv[el[i][cont]],zv[el[i][cont]]);
+          cl[cont]=c(xv[el[i][cont]],zv[el[i][cont]]);
+          dl[cont]=d(xv[el[i][cont]],zv[el[i][cont]]);
+          El[cont]=e(xv[el[i][cont]],zv[el[i][cont]]);
+          fl[cont]=f(Z,Yj[el[i][cont]]); gl[cont]=g(Z,Yj[el[i][cont]],Y[el[i][cont]],Hp[el[i][cont]]);
         }
         //matriz de cada elemento
         for (i=0;i<3;i++)
         {
           for(j=0;j<3;j++)
           {
-            k[i][j]+=(-1/(4*dt))*(dx[1]*dx[1]*al[j]+dx[1]*dz[1]*bl[j]+dz[1]*dz[1]*cl[j])+(1/6)*(dx[1]*dl[j]+dz[1]*el[j])+(dt/12)*2*fl[j];
+            k[i][j]+=(-1/(4*dt))*(dx[1]*dx[1]*al[j]+dx[1]*dz[1]*bl[j]+dz[1]*dz[1]*cl[j])+(1/6)*(dx[1]*dl[j]+dz[1]*El[j])+(dt/12)*2*fl[j];
           }
         }
         //vetor da direita em cada elemento
@@ -333,7 +342,7 @@ int main()
         //Matriz global vetor da direita
         for (j1=0;j1<3;j1++){
             for (i1=0;i1<3;i1++){
-                K[el[i][j1]][el[i][i1]]=K[el[i][j1],el[i][i1]]+k[j1][i1];
+                K[el[i][j1]][el[i][i1]]=K[el[i][j1]][el[i][i1]]+k[j1][i1];
             }
             M[el[i][j1]]=M[el[i][j1]]+m[j1];
         }
@@ -341,8 +350,7 @@ int main()
 
     //redução do sistema - Inclusão das condições de fronteira
     int np2=(nx-2)*(nz-2);
-    ic=0;
-    complex double Mr[]
+    ic=0;    
     for (i=0;i<np;i++)
     {
       if (vc[i]!=1)
