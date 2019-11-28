@@ -230,7 +230,8 @@ int main()
       }
     }
     //condições de fronteira
-    int vc[np];
+    int vc[np],qt_front;
+    qt_front=0;
     complex double Hs[np];
     for (i=0;i<np;i++)
     {
@@ -238,6 +239,7 @@ int main()
       if (xv[i]==xv[1] || xv[i]==xv[np] || zv[i]==zv[1]|| zv[i]==zv[np])
       {
         Hs[i]=0; vc[i]=1;
+        qt_front++;
       }
     }
 
@@ -299,10 +301,14 @@ int main()
 
     //construção da matriz e vetor da direita
     complex double K[np][np];
+    complex double Kr[np-qt_front][np-qt_front];
     complex double k[3][3],m[3];
+    int np2=(nx-2)*(nz-2);
+    complex double Mr[np-qt_front];
     double dt;
-    double dx[3],dz[3];    
+    double dx[3],dz[3];
     int i1,j1;
+    int jc=0;
     complex double al[3];
     complex double bl[3];
     complex double cl[3];
@@ -349,15 +355,79 @@ int main()
     }
 
     //redução do sistema - Inclusão das condições de fronteira
-    int np2=(nx-2)*(nz-2);
-    ic=0;    
+    ic=0;
+    jc=0;
     for (i=0;i<np;i++)
     {
       if (vc[i]!=1)
       {
-
+        Mr[ic]=M[i];
+        for (j=0;j<np;j++)
+        {
+          if (vc[i]!=1)
+          {
+            Kr[ic][jc]=K[i][j];
+            jc++;
+          } else
+          {
+            Mr[ic]-=K[i][j]*Hs[j];
+          }
+        }
         ic++;
       }
     }
+
+
+    //solução por eliminação gaussiana
+    //1-triangularização
+    complex double Ur[np-qt_front];
+    complex double temp;
+    for (i=0;i<(np-qt_front-1);i++)
+    {
+      for (j=i+1;j<np-qt_front;j++)
+      {
+        temp=Kr[j][i]/Kr[i][i];
+        for (int l=i+1;l<np-qt_front;l++)
+        {
+          Kr[j][l]-=temp*Kr[i][l];
+        }
+        Mr[j]-=temp*Mr[i];
+      }
+    }
+    //2-retrossubstituição
+    Ur[np-qt_front]=Mr[np-qt_front]/Kr[np-qt_front][np-qt_front];
+    for (i=(np-qt_front-1);i>=0;i--)
+    {
+      Ur[i]=Mr[i];
+      for (j=i+1;j<np-qt_front;j++)
+      {
+        Ur[i]-=Kr[i][j]*Ur[j];
+      }
+      Ur[i]=Ur[i]/Kr[i][i];
+    }
+    //Incorporando as condições de fronteira
+    complex double U[np];
+    ic=0;
+    for (i=0;i<np;i++)
+    {
+      if (vc[i]!=1)
+      {
+        U[i]=Ur[ic];
+        ic++;
+      }
+      else
+      {
+        U[i]=Hs[i];
+      }
+    }
+    complex double Htotal[np];
+    FILE *file;
+    file=fopen("H_sec.dat","w");
+    for (i=0;i<np;i++)
+    {
+      Htotal[i]=U[i]+Hp[i];
+      fprintf(file,"%i %f %f\n",cont,creal(Htotal[i]),cimag(Htotal[i]));
+    }
+
     return 0;
 }
