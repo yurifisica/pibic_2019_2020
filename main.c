@@ -7,7 +7,7 @@ const float pi = 3.1415926;
 const float mu=4*3.1415926E-7;
 const float eps= 8.85E-12;
 
-// complex double ctanh(complex double x)
+// double complex ctanh(double complex x)
 // {
 //     if (creal(x)<=86)
 //     {
@@ -18,31 +18,31 @@ const float eps= 8.85E-12;
 //     }
 // }
 
-complex double mult_complex(complex double Z1, complex double Z2)
+double complex mult_complex(double complex Z1, double complex Z2)
 {
-  complex double Z = (creal(Z1)*creal(Z2)-cimag(Z1)*cimag(Z2))+(creal(Z1)*cimag(Z2)+cimag(Z1)*creal(Z2))*I;
+  double complex Z = (creal(Z1)*creal(Z2)-cimag(Z1)*cimag(Z2))+(creal(Z1)*cimag(Z2)+cimag(Z1)*creal(Z2))*I;
   return Z;
 }
 
-complex double div_complex(complex double Z1, complex double Z2)
+double complex div_complex(double complex Z1, double complex Z2)
 {
-  complex double Z = (creal(Z1)*creal(Z2)-cimag(Z1)*cimag(Z2)+(-creal(Z1)*cimag(Z2)+cimag(Z1)*creal(Z2))*I)/(pow(creal(Z2),2)-pow(cimag(Z2),2));
+  double complex Z = (creal(Z1)*creal(Z2)-cimag(Z1)*cimag(Z2)+(-creal(Z1)*cimag(Z2)+cimag(Z1)*creal(Z2))*I)/(pow(creal(Z2),2)-pow(cimag(Z2),2));
   return Z;
 }
 
-//cálculo do campo primário
-void campo_prim(int n,double sigma[],int n_h, double h[], double frq, double zp[], int np,complex double Hp[])
+//calculo do campo primario
+void campo_prim(int n,double sigma[],int n_h, double h[], double frq, double zp[], int np,double complex Hp[])
 {
   FILE *file;
   file=fopen("a.dat","w");
   int cont,ic;
   if (file==NULL)
   {
-    printf("caminho inválido");
+    printf("caminho invalido");
   }
   double w=2*pi*frq;
-  complex double Z=I*w*mu;
-  complex double H[n];
+  double complex Z=I*w*mu;
+  double complex H[n];
   H[0]=1;
   double z[n_h+1];
   z[0]=0;
@@ -50,9 +50,9 @@ void campo_prim(int n,double sigma[],int n_h, double h[], double frq, double zp[
   {
     z[cont+1]=z[cont]+h[cont];
   }
-  complex double Y[n+1];
-  complex double u[n+1];
-  complex double Zint[n+1];
+  double complex Y[n+1];
+  double complex u[n+1];
+  double complex Zint[n+1];
   Y[0]=I*w*eps;
   u[0]=I*csqrt(-Z*Y[0]);
   Zint[0]=u[0]/Y[0];
@@ -62,18 +62,18 @@ void campo_prim(int n,double sigma[],int n_h, double h[], double frq, double zp[
     u[cont]=I*csqrt(-Z*Y[cont]);
     Zint[cont]=u[cont]/Y[cont];
   }
-  complex double Zap[n];
+  double complex Zap[n];
   Zap[n-1]=Zint[n];
   for (cont=n-2;cont>=0;cont--)
   {
-    complex double aux=u[cont+1]*h[cont];
+    double complex aux=u[cont+1]*h[cont];
     Zap[cont]=Zint[cont+1]*(Zap[cont+1]+Zint[cont+1]*ctanh(aux))/(Zint[cont+1]+Zap[cont+1]*ctanh(aux));
   }
-  complex double rtm[n-1];
+  double complex rtm[n-1];
   rtm[0]=(Zint[0]-Zap[0])/(Zint[0]+Zap[0]);
   for (cont=1;cont<n;cont++)
   {
-    complex double aux=u[cont]*h[cont-1];
+    double complex aux=u[cont]*h[cont-1];
     rtm[cont]=(Zint[cont]-Zap[cont])/(Zint[cont]+Zap[cont]);
     H[cont]=H[cont-1]*(1+rtm[cont-1])*cexp(-aux)/(1+rtm[cont]*cexp(-2*aux));
   }
@@ -94,18 +94,18 @@ void campo_prim(int n,double sigma[],int n_h, double h[], double frq, double zp[
     {
       if (zp[cont]<z[n_h])
       {
-        complex double aux=u[cmd]*(zp[cont]-z[cmd]);
+        double complex aux=u[cmd]*(zp[cont]-z[cmd]);
         Hp[cont]=H[cmd]*(cexp(-aux)+rtm[cmd]*cexp(aux));
       }
       else
       {
-        complex double aux=u[n]*(zp[cont]-z[cmd]);
+        double complex aux=u[n]*(zp[cont]-z[cmd]);
         Hp[cont]=H[n]*cexp(-aux);
       }
     }
     else
     {
-      complex double aux=u[0]*zp[cont];
+      double complex aux=u[0]*zp[cont];
       Hp[cont]=H[0]*(cexp(-aux)+rtm[0]*cexp(aux));
     }
     fprintf(file,"%i %f %f\n",cont,creal(Hp[cont]),cimag(Hp[cont]));
@@ -113,19 +113,19 @@ void campo_prim(int n,double sigma[],int n_h, double h[], double frq, double zp[
   fclose(file);
   return;
 }
-complex double a(double x, double z){return 1;}
-complex double b(double x, double z){return 0;}
-complex double c(double x, double z){return 1;}
-complex double d(double x, double z){return 0;}
-complex double e(double x, double z){return 0;}
-complex double f(complex double Z, complex double Y){return -Z*Y;}
-complex double g(complex double Z, complex double Yj, complex double Yp, complex double Hp){return -Z*(Yj-Yp)*Hp;}
+double complex a(double x, double z){return 1;}
+double complex b(double x, double z){return 0;}
+double complex c(double x, double z){return 1;}
+double complex d(double x, double z){return 0;}
+double complex e(double x, double z){return 0;}
+double complex f(double complex Z, double complex Y){return -Z*Y;}
+double complex g(double complex Z, double complex Yj, double complex Yp, double complex Hp){return -Z*(Yj-Yp)*Hp;}
 //programa principal
-int main()
+int main(int argc, char *argv )
 {
   int n_cam=2,cont,j,i;//numero de camadas
   double frq=5*pow(10,3);//frequência
-  double espessura[1]={200};//espessura das camadas intermediárias
+  double espessura[1]={200};//espessura das camadas intermediarias
   size_t n_h=length(espessura);
   double sigma[2];
   sigma[0]=pow(10,-3);sigma[1]=0.5;
@@ -157,34 +157,34 @@ int main()
   int np=nx*nz;
   int ne=(nx-1)*(nz-1)*2;
   double xv[np],zv[np];
-  complex double Y[np],Yj[np],sig[np];
+  double complex Y[np],Yj[np],sig[np];
   double w =2*pi*frq;
   Y[0]=I*w*eps;
-  complex double Z=I*w*mu;
-  complex double K[np][np];
-  complex double k[3][3],m[3];
+  double complex Z=I*w*mu;
+  double complex K[np][np];
+  double complex k[3][3],m[3];
   int np2=(nx-2)*(nz-2);
   double dt;
   double dx[3],dz[3];
   int i1,j1,l;
   int jc=0;
-  double sigma1=0.5;//solo embaixo dos prédios
-  double sigma2=4.8;//água salgada
-  double sigma3=2.8;//proporção de 1/2 de areia e cimento (prédios), com fibras de aço carbono
-  complex double Hp[np];
-  complex double al[3];
-  complex double bl[3];
-  complex double cl[3];
-  complex double dl[3];
-  complex double El[3];
-  complex double fl[3];
-  complex double gl[3];
+  double sigma1=0.5;//solo embaixo dos predios
+  double sigma2=4.8;//agua salgada
+  double sigma3=2.8;//proporcao de 1/2 de areia e cimento (predios), com fibras de aco carbono
+  double complex Hp[np];
+  double complex al[3];
+  double complex bl[3];
+  double complex cl[3];
+  double complex dl[3];
+  double complex El[3];
+  double complex fl[3];
+  double complex gl[3];
   double xv2[nz*nx2];
-  complex double Hs[np];
+  double complex Hs[np];
   int vc[np],qt_front;
   int cc;
   int el[(nz-1)*(nx-1)*2][4];
-  complex double M[np];
+  double complex M[np];
   int flag;
   int ic=0;
   for (j=0;j<nz;j++)
@@ -219,7 +219,7 @@ int main()
       ic++;
     }
   }
-  //definição de coeficientes da edo
+  //definicao de coeficientes da edo
   cc=-1;
   ic=0;
   FILE *fileaux;
@@ -259,7 +259,7 @@ int main()
   printf("%i\n",cc);
   printf("%i\n",(nz-1)*(nx-1)*2);
   printf("%i %i\n",nz,nx);
-  //condições de fronteira
+  //condicoes de fronteira
   qt_front=0;
   for (i=0;i<np;i++)
   {
@@ -270,10 +270,10 @@ int main()
       qt_front++;
     }
   }
-  complex double Kr[np-qt_front][np-qt_front];
-  complex double Mr[np-qt_front];
-  //definição dos meios secundários
-  //meio secundário 1 (solo)
+  double complex Kr[np-qt_front][np-qt_front];
+  double complex Mr[np-qt_front];
+  //definicao dos meios secundarios
+  //meio secundario 1 (solo)
   for (i=0;i<np;i++)
   {
     if (xv[i]>=3000 && xv[i]>=10000 && zv[i]>5000 && zv[i]<=6500)
@@ -285,7 +285,7 @@ int main()
     M[i]=0;
   }
 
-  //meio secundário 2 (mar)
+  //meio secundario 2 (mar)
   for (i=0;i<np;i++)
   {
     if (xv[i]>=0 && xv[i]<=3000)
@@ -314,7 +314,7 @@ int main()
       }
     }
   }
-  //meio secundário 3 (prédios)
+  //meio secundario 3 (predios)
   for (i=0;i<np;i++)
   {
     if (xv[i]>=6500 && xv[i]<=7000 && zv[i]>=espessura[0]-50 && zv[i]<espessura[0]) {
@@ -334,7 +334,7 @@ int main()
     }
   }
 
-  // construção da matriz e vetor da direita
+  // construcao da matriz e vetor da direita
   for (i=0;i<ne;i++){
     dx[0]=zv[el[i][1]]-zv[el[i][2]];
     dx[1]=zv[el[i][2]]-zv[el[i][0]];
@@ -383,7 +383,7 @@ int main()
     }
   }
 
-  //redução do sistema - Inclusão das condições de fronteira
+  //reducao do sistema - Inclusao das condicoes de fronteira
   ic=0;
   jc=0;
   for (i=0;i<np;i++)
@@ -407,10 +407,10 @@ int main()
   }
 
 
-  //solução por eliminação gaussiana
-  //1-triangularização
-  complex double Ur[np-qt_front];
-  complex double temp;
+  //solucao por eliminacao gaussiana
+  //1-triangularizacao
+  double complex Ur[np-qt_front];
+  double complex temp;
   for (i=0;i<(np-qt_front-1);i++)
   {
     for (j=i+1;j<np-qt_front;j++)
@@ -423,7 +423,7 @@ int main()
       Mr[j]-=temp*Mr[i];
     }
   }
-  //2-retrossubstituição
+  //2-retrossubstituicao
   Ur[np-qt_front]=Mr[np-qt_front]/Kr[np-qt_front][np-qt_front];
   for (i=(np-qt_front-1);i>=0;i--)
   {
@@ -434,8 +434,8 @@ int main()
     }
     Ur[i]=Ur[i]/Kr[i][i];
   }
-  //Incorporando as condições de fronteira
-  complex double U[np];
+  //Incorporando as condicoes de fronteira
+  double complex U[np];
   ic=0;
   for (i=0;i<np;i++)
   {
@@ -449,7 +449,7 @@ int main()
       U[i]=Hs[i];
     }
   }
-  complex double Htotal[np];
+  double complex Htotal[np];
   FILE *file;
   file=fopen("H_sec.dat","w");
   for (i=0;i<np;i++)
